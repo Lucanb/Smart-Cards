@@ -1,0 +1,5 @@
+modificare functie de verificare a pinului astfel incat dupa 3 verificari fara succes, a 4-a oare se va returna un cod de eroare pus la dispozitie
+	-la a 4-a incercare nu se mai modif deloc pinul ci da eroare
+	
+	
+	-incercare de a reseta codul pin cu puk-ul(deblocam acel SC card folosiind functiile si codul PUK dat)

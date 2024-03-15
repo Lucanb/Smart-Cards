@@ -1,0 +1,43 @@
+/1. create Wallet instance
+//CLA INS P1 P2 LC Data
+80 B8 00 00 14 0A A0 00 00 00 62 03 01 0C 06 01 08 00 00 05 01 02 03 04 05 7F
+
+//2. select Wallet applet
+//CLA INS P1 P2 LC Data
+00 A4 04 00 0A A0 00 00 00 62 03 01 0C 06 01 7F
+
+//3. send verify pin command
+//CLA INS P1 P2 LC Data
+80 20 00 00 05 01 02 03 04 05 7F
+
+//4. credit 80 dollars to the account
+//CLA INS P1 P2 LC Data
+80 30 00 00 01 50 7F
+
+//5. verify balance
+//CLA INS P1 P2 LC Data
+80 50 00 00 00 02 7F
+
+//6. debit 30 from the account
+//CLA INS P1 P2 LC Data
+80 40 00 00 01 1E 7F
+
+//7. verify balance
+//CLA INS P1 P2 LC Data
+80 50 00 00 00 02 7F
+
+//8. debit 60 from the account
+//CLA INS P1 P2 LC Data
+80 40 00 00 01 3C 7F
+
+//9. verify balance
+//CLA INS P1 P2 LC Data
+80 50 00 00 00 02 7F
+
+//10. credit 200 to the account
+//CLA INS P1 P2 LC Data
+80 30 00 00 01 C8 7F
+
+//11. verify balance
+//CLA INS P1 P2 LC Data
+80 50 00 00 00 02 7F
