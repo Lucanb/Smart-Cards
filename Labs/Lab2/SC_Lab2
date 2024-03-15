@@ -1,0 +1,22 @@
+install ul din Applet practic ne da o instanta printr-un byte array.
+Aceasta metoda trebuie sa faca apel la constructor si clasa extinde Applet ; Acest constructor apeleaza register() astfel incat la runtime stie ce indetificator are si stie sa proceseze orice comanda ajunge la card.
+
+In wallet am APDU,APPLET,EXCEPIONS si OwnerPin (ca la curs) am nev de aceste clase. Incep cu un card ce se foloseste in mod restrans(merg cu nr maxime de tranzactii) . PIN-ul are limita de incercari size-uri.
+
+
+APDU - byte de clasa ,instruction byte,P1,P2,Lc,data - parametrii. In cod se vede ca se declara un byte de clasa pt wallet care e de 80 (definit conform standardizarii).
+si o sa am pt verify/credit ... dimensiuni.
+
+Mai departe avem coduri de eroare ~ In clasa ISO am multe coduri de eroarea default ce pot fi folosite. De asemenea, vedem ca avem metoda de install(bArray,...) - isi ia dintr-un fisier de scripting paramatrii. Cum facem cu simukatorul,avem partea de card dar si exteriorul simulat printr-un file prin care folosesc comenzi smart carduri de interogare. Ex :  cand rulam scriptul 1-4 la instalare,se ruleaza aceste interogari. Avem un fisier la dispozitie(ala de mai sus in care important (APDU) e ca Lc = 14(lungimea de fisier) , data : tot ce e cu verde : lung id-ului si cu mov e chiar identif. aplicatiei).important e acel 0x05 care da lungimea.
+
+Slectul e singura comanda care are body de clasa ce e baza infrastructurii smart carduri(format standard). SELECTIA aplicatiei noastre se face prin AID (p1 = 0x04).
+
+La mn e selectat T =1/ = CL (contact less) - am mai jos comenzile (ele de fapt sunt inpachetate in protocolul de transport desi in consola nu se vede). fisierul de la rulare cap-Wallet este de fapt
+reprezentarea Applet-ului() ~ most important -> o data ce am aceasta reprezentare pot rula din wallet str(wallet e la mn) -> se creeaza comenzile de create / select/ altele. orice comanda e rulata neaparat cu ";" (iau acele siruri numerice)
+
+pe credit am un tip de validare(pe acea functie) --> getBuffer ia buffer-ul + mai jos de la numBytes e o verificare care se face standard.(la receptie trebuie sa fiu sigur ca iau exact ce el imi da)
+deci in App am metode ca numbytesc care sa ma ajute cu asta. In byteRead pot retine o val de dim. maxima(daca numBytes sau bytesReads difera de 1 => eroare )
+
+
+
+! de facut test.scr si pus in acel apdu_scripts (se ruleaza dupa ce pornesc simulatorul).
