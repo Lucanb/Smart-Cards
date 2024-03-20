@@ -30,13 +30,12 @@ public class Wallet extends Applet {
     final static byte CREDIT = (byte) 0x30;
     final static byte DEBIT = (byte) 0x40;
     final static byte GET_BALANCE = (byte) 0x50;
-    private byte[] PUK = {(byte)0x09, (byte)0x09, (byte)0x09, (byte)0x09, (byte)0x09, (byte)0x09, (byte)0x09};
+    final static byte RESET_PIN_TRY_COUNTER = (byte) 0x2C;
+
     // maximum balance
     final static short MAX_BALANCE = 0x7FFF;
     // maximum transaction amount
     final static byte MAX_TRANSACTION_AMOUNT = 127;
-    
-    static byte PIN_COUNTER = (byte)0x00; 
 
     // maximum number of incorrect tries before the
     // PIN is blocked
@@ -57,10 +56,20 @@ public class Wallet extends Applet {
     final static short SW_EXCEED_MAXIMUM_BALANCE = 0x6A84;
     // signal the the balance becomes negative
     final static short SW_NEGATIVE_BALANCE = 0x6A85;
+    
+    // signal that there aren't any PIN verification tries remaining
+    final static short SW_SECURITY_STATUS_NOT_SATISFIED = 0X6982;
+    
+    // signal that a command is not allowed
+    final static short SW_COMMAND_NOT_ALLOWED = 0x6986;
+    
+    //PUK
+    final static short[] PUK = {0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09};
 
     /* instance variables declaration */
     OwnerPIN pin;
     short balance;
+    short loyaltyPoints = 0; 
 
     private Wallet(byte[] bArray, short bOffset, byte bLength) {
 
@@ -152,6 +161,9 @@ public class Wallet extends Applet {
             case VERIFY:
                 verify(apdu);
                 return;
+            case RESET_PIN_TRY_COUNTER:
+            	resetPinTryCounter(apdu);
+            	return;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
@@ -220,49 +232,93 @@ public class Wallet extends Applet {
 
         // get debit amount
         byte debitAmount = buffer[ISO7816.OFFSET_CDATA];
-
+        byte debitAmountCpy = debitAmount;
         // check debit amount
         if ((debitAmount > MAX_TRANSACTION_AMOUNT) || (debitAmount < 0)) {
             ISOException.throwIt(SW_INVALID_TRANSACTION_AMOUNT);
         }
-
+        
         // check the new balance
         if ((short) (balance - debitAmount) < (short) 0) {
             ISOException.throwIt(SW_NEGATIVE_BALANCE);
         }
+        
+        if (loyaltyPoints > 0) {
+            if (loyaltyPoints >= debitAmount) {
+                loyaltyPoints -= debitAmount;
+                debitAmount = 0;
+            } else {
+                debitAmount -= loyaltyPoints;
+                loyaltyPoints = 0;
+            }
+        }
+        
+        // update loyalty points based on debit amount
+        loyaltyPoints += (short) (debitAmountCpy / 40);
 
         balance = (short) (balance - debitAmount);
 
     } // end of debit method
-    
-    //functie resetare PUK
 
-   
     private void getBalance(APDU apdu) {
 
+//        byte[] buffer = apdu.getBuffer();
+//
+//        // inform system that the applet has finished
+//        // processing the command and the system should
+//        // now prepare to construct a response APDU
+//        // which contains data field
+//        short le = apdu.setOutgoing();
+//
+//        if (le < 2) {
+//            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+//        }
+//
+//        // informs the CAD the actual number of bytes
+//        // returned
+//        apdu.setOutgoingLength((byte) 2);
+//
+//        // move the balance data into the APDU buffer
+//        // starting at the offset 0
+//        buffer[0] = (byte) (balance >> 8);
+//        buffer[1] = (byte) (balance & 0xFF);
+//
+//        // send the 2-byte balance at the offset
+//        // 0 in the apdu buffer
+//        apdu.sendBytes((short) 0, (short) 2);
         byte[] buffer = apdu.getBuffer();
 
-        // inform system that the applet has finished
-        // processing the command and the system should
-        // now prepare to construct a response APDU
-        // which contains data field
+        // Get the command byte from the APDU buffer
+        byte p1 = buffer[ISO7816.OFFSET_P1];
+        byte p2 = buffer[ISO7816.OFFSET_P2];
+
+        // Determine if the client requests loyalty points or currency balance
+        boolean requestLoyaltyPoints = ((p1 == 0x01) && (p2 == 0x00)); 
+
+        // Calculate the length of the response APDU
         short le = apdu.setOutgoing();
 
         if (le < 2) {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
 
-        // informs the CAD the actual number of bytes
-        // returned
+        // Set the outgoing length based on the response format (2 bytes for currency, 2 bytes for loyalty points)
         apdu.setOutgoingLength((byte) 2);
 
-        // move the balance data into the APDU buffer
-        // starting at the offset 0
-        buffer[0] = (byte) (balance >> 8);
-        buffer[1] = (byte) (balance & 0xFF);
+        // Prepare the response based on the request
+        if (requestLoyaltyPoints) {
+            // If client requests balance in loyalty points, send loyalty points
+            buffer[0] = (byte) (loyaltyPoints >> 8);
+            buffer[1] = (byte) (loyaltyPoints & 0xFF);
+//            System.out.println("Loyalty Points: " + String.valueOf(loyaltyPoints));
+        } else {
+            // Otherwise, send currency balance
+            buffer[0] = (byte) (balance >> 8);
+            buffer[1] = (byte) (balance & 0xFF);
+//            System.out.println("Balance: " + String.valueOf(balance));
+        }
 
-        // send the 2-byte balance at the offset
-        // 0 in the apdu buffer
+        // Send the response
         apdu.sendBytes((short) 0, (short) 2);
 
     } // end of getBalance method
@@ -314,5 +370,7 @@ public class Wallet extends Applet {
     	else {
     		ISOException.throwIt(SW_COMMAND_NOT_ALLOWED);
     	}
-    }//end reset method
-   }
+    	
+    } // end of reset pin try limit method
+    
+} // end of class Wallet
