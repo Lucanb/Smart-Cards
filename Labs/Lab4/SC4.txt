@@ -1,0 +1,60 @@
+modificat debit-ul ca sa pot cumpara si cu ron si cu pct loialitate si getBalance-ul ca sa returnez si aceste pct + loaiality points.
+
+Nu se modifica creditul/altcv
+
+
+-->modific debit si getBalance()
+
+
+    private void debit(APDU apdu) {
+
+        // access authentication
+        if (!pin.isValidated()) {
+            ISOException.throwIt(SW_PIN_VERIFICATION_REQUIRED);
+        }
+
+        byte[] buffer = apdu.getBuffer();
+
+        byte numBytes = (buffer[ISO7816.OFFSET_LC]);
+
+        byte byteRead = (byte) (apdu.setIncomingAndReceive());
+
+        if ((numBytes != 1) || (byteRead != 1)) {
+            ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+        }
+
+        // get debit amount
+        byte debitAmount = buffer[ISO7816.OFFSET_CDATA];
+        byte debitAmountCpy = debitAmount;
+        // check debit amount
+        if ((debitAmount > MAX_TRANSACTION_AMOUNT) || (debitAmount < 0)) {
+            ISOException.throwIt(SW_INVALID_TRANSACTION_AMOUNT);
+        }
+        
+        // check the new balance
+        if ((short) (balance - debitAmount) < (short) 0) {
+            ISOException.throwIt(SW_NEGATIVE_BALANCE);
+        }
+        if (loyaltyPoints != 0 ) {
+        	if((byte)(loyaltyPoints) <= debitAmount)
+        	{
+        		debitAmount = (byte) (debitAmount - loyaltyPoints);
+        		loyaltyPoints = 0;
+        	}
+        	
+        if((byte)(loyaltyPoints) > debitAmount)
+         	{
+        		loyaltyPoints = (short) (loyaltyPoints - debitAmount);
+        		debitAmount = (byte)(0);
+        	}
+        }
+        
+        if (debitAmountCpy > (byte)(40))
+        {
+        	loyaltyPoints += (short)(debitAmountCpy / 40);
+        }
+        balance = (short) (balance - debitAmount);
+
+    } // end of debit method     "Daca clientul doreste sa afle balanta contului, atunci asecsta 
+va returna fie suma in ron fie suma in puncte de loyalitate,in functie de optiunea clintului intr-o singura
+cmonada." 

@@ -1,0 +1,17 @@
+functia de debit -- doar ins-ul curent fol
+
+el foloseste abonamentul doar consumand
+o singura calatorie --> el poate cu o lim de 150
+calatorie si in sapt(in week am reducere ca
+e la jumate de pret si achizitia poate fi  facuta
+in max numar de 10 persoane) -- > cel mult
+de 20 calatorii(daca se iau mai ulte de 10 -- discount
+20%) Pentru balanta se returneaza balanta si
+numarul ramase in abonaent --> folosim
+acel wallet sample.Posibilitate de a cumpara
+un tip de abonament si modific functia de 
+bilete pt a achizitiona bilete cu acele condditii de acolo
+pt testarea vem nevoie de multiple conditii
+(interval orar,disponibilitatea in cont a ron-ului/ziua sapt
+/nr bilete) --> putem combina mai multe xriterr
+--40 p pana in sapt 7
